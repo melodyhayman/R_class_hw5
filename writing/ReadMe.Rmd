@@ -1,0 +1,14 @@
+---
+title: "commits"
+author: "Melody Hayman"
+date: "2024-11-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#write code to list files in data directory, will need .. then go into data, commit change to commit window
+```
