@@ -1,0 +1,1 @@
+This data set is from the Washington Post on homicides in 50 cities in the USA. The data is from a GitHub repository: https://github.com/washingtonpost/data-homicides. The data set is also saved here under the data folder labeled "homicide.csv"
