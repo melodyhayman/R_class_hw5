@@ -9,31 +9,63 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r}
-#load in data from data folder
+
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(sf)
+library(tigris)
+library(forcats)
 library(readr)
+
+
+#load in data from data folder
 getwd()
 homicide_data <- read.csv("../data/homicide.csv")
-head(homicide_data)
-#want to see all the cities to pick on to use for homework
-unique(homicide_data$city)
-sort(unique(homicide_data$city))
-colnames(homicide_data)
+#head(homicide_data)
+#colnames(homicide_data)
+
+
+# Filter for Denver homicides
+denver_homicides <- homicide_data %>%
+  filter(city == "Denver")
+
+# Convert reported_date to Date type
+denver_homicides$reported_date <- as.Date(denver_homicides$reported_date)
+
+# make a column for solved vs unsolved
+denver_homicides$solved <- ifelse(denver_homicides$disposition == "Solved", "Solved", "Unsolved")
+
+# make a column for victim's race, lumping others into a category for the top 3 races
+denver_homicides$victim_race_lumped <- fct_lump(denver_homicides$victim_race, n = 3)
+
+# Convert latitude and longitude to a sf object
+denver_homicides_sf <- st_as_sf(denver_homicides, coords = c("lon", "lat"), crs = 4326)
+
+# Download sub-city geography for Denver
+denver_tracts <- tracts(state = "CO", county = "Denver", year = 2020)
+
+# Create the plot
+ggplot() +
+  # Plot the tracts as a base layer
+  geom_sf(data = denver_tracts, fill = "lightgray", color = "white", size = 0.2) +
+  # Plot the homicides as points
+  geom_sf(data = denver_homicides_sf, aes(color = victim_race_lumped, shape = solved), size = 2, alpha = 0.7) +
+  # Add facets for solved vs unsolved
+  facet_wrap(~ solved) +
+  # Customize the color scale for the races
+  scale_color_manual(values = c("White" = "blue", "Black" = "red", "Hispanic" = "green", "Other" = "gray")) +
+  labs(title = "Homicide Locations in Denver", 
+       subtitle = "Faceted by Solved vs Unsolved, Colored by Victim's Race") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank()) +
+  guides(shape = guide_legend(title = "Homicide Status"),
+         color = guide_legend(title = "Race"))
 
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
